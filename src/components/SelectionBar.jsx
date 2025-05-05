@@ -3,76 +3,60 @@ import React from 'react';
 import { useAppContext } from '../hooks/useAppContext'; // Ensure path is correct
 
 const SelectionBar = () => {
-  // --- Get State & Defaults (Keep the safe destructuring) ---
+  // Get state, provide defaults. Note: clearCurrentActions is no longer needed here.
   const contextValue = useAppContext();
   const {
       currentActions = [],
       removeCurrentAction = () => {},
-      clearCurrentActions = () => {}
+      // clearCurrentActions // Removed as the button is gone
   } = contextValue || {};
 
-  // --- Debugging Logs (Optional: You can remove these now if everything works) ---
-  // console.log('SelectionBar contextValue:', contextValue);
-  // console.log('SelectionBar currentActions (after default):', currentActions);
-
-  // --- Render Null if No Actions ---
+  // Render Null if No Actions (Keep as is)
   if (!currentActions || currentActions.length === 0) {
     return null;
   }
 
-  // --- Event Handlers ---
+  // Event Handler for removing single action (Keep as is)
   const handleRemoveAction = (actionToRemove) => {
     removeCurrentAction(actionToRemove);
   };
 
-  const handleClearAll = () => {
-    clearCurrentActions();
-  };
-
   // --- Render Component ---
   return (
-    <div className="mb-4 p-3 bg-white rounded shadow-sm border border-primary">
-      {/* Header (Unchanged) */}
-      <div className="d-flex justify-content-between align-items-center mb-2">
-        <h6 className="mb-0">Selected Actions</h6>
-        {currentActions.length > 0 && (
-          <button
-            className="btn btn-sm btn-outline-danger d-flex align-items-center"
-            onClick={handleClearAll}
-            title="Clear All Actions"
-          >
-            {/* SVG icon */}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-x-lg me-1" viewBox="0 0 16 16">
-               <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-            </svg>
-            Clear All
-          </button>
-        )}
-      </div>
+    // --- Container: Reduced margin-bottom and padding ---
+    <div className="mb-2 p-1 bg-white rounded shadow-sm border border-primary"> {/* Changed to mb-2 p-1 */}
 
-      {/* --- MODIFIED: Use Bootstrap List Group --- */}
-      {/* Use <ul> with list-group class */}
-      <ul className="list-group">
+      {/* --- REMOVED: Header div containing Title and Clear All button --- */}
+
+      {/* --- List Group: Added list-group-flush to remove borders/rounding --- */}
+      <ul className="list-group list-group-flush">
         {currentActions.map((action, index) => (
-          // Each action is a list item
-          // Apply alternating background using bg-light utility class on even rows (index 0, 2, 4...)
           <li
             key={action.id || index} // Use unique ID if available
-            className={`list-group-item d-flex justify-content-between align-items-center ${
-              index % 2 === 0 ? 'bg-light' : '' // Add bg-light to even items
+            // --- List Item: Reduced padding, keep flex layout ---
+            className={`list-group-item d-flex justify-content-between align-items-center py-1 px-2 ${ // Smaller padding: py-1 px-2
+              index % 2 === 0 ? 'bg-light' : '' // Keep alternating color
             }`}
           >
-            {/* Action Description */}
-            {/* text-wrap ensures long descriptions wrap within the list item */}
-            <span className="text-wrap me-2">{action.description}</span>
+            {/* --- Action Description: Smaller font size, reduced margin --- */}
+            <span
+              className="text-wrap me-1" // Reduced margin-end to me-1
+              // Apply significantly smaller font size using inline style
+              // 0.7rem is ~70% of standard 1rem, 0.6rem is 60% etc. Adjust as needed.
+              style={{ fontSize: '0.7rem', lineHeight: '1.2' }} // Added line-height for tight spacing
+            >
+              {action.description}
+            </span>
 
-            {/* Remove Button */}
+            {/* --- Remove Button: Keep small version --- */}
             <button
               type="button"
-              className="btn-close btn-sm" // Use btn-close for 'X' appearance
+              className="btn-close btn-sm" // Keep btn-sm for small 'X'
               aria-label="Remove Action"
               onClick={() => handleRemoveAction(action)}
               title={`Remove action: ${action.description}`}
+              // Optional: Adjust size further if needed, though btn-close btn-sm is quite small
+              // style={{ fontSize: '0.5em', padding: '0.1em' }}
             ></button>
           </li>
         ))}

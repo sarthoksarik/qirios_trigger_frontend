@@ -20,7 +20,7 @@ function getCookie(name) {
 
 // Create an Axios instance
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api', // Your API base URL
+    baseURL: import.meta.env.VITE_API_BASE_URL, // Your API base URL
     xsrfCookieName: 'csrftoken', // Tells axios to look for this cookie
     xsrfHeaderName: 'X-CSRFToken', // Tells axios to set this header with the cookie value
     withCredentials: true, // *** CRITICAL: Allows sending cookies cross-origin ***

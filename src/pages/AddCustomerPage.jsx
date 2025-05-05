@@ -1,7 +1,10 @@
 // src/pages/AddCustomerPage.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+// *** Import the configured apiClient ***
+import apiClient from '../api/axiosConfig'; // Adjust path if needed
+// *** Remove the default axios import if it was present (it wasn't shown but good practice) ***
+// import axios from 'axios';
 import { useAppContext } from '../hooks/useAppContext'; // Import context hook
 
 const AddCustomerPage = () => {
@@ -18,19 +21,17 @@ const AddCustomerPage = () => {
     const navigate = useNavigate();
     const { fetchCustomers } = useAppContext(); // Get function to refresh customer list
 
-    // Backend API endpoint
-    const API_ENDPOINT = 'http://127.0.0.1:8000/api/customers/create-or-update-from-sheet/';
+    // *** REMOVE Hardcoded API Endpoint ***
+    // const API_ENDPOINT = 'http://127.0.0.1:8000/api/customers/create-or-update-from-sheet/';
 
     const handleSubmit = async (event) => {
         event.preventDefault(); // Prevent default browser form submission
 
-        // Basic frontend validation
         if (!name.trim() || !didNumber.trim() || !sheetUrl.trim()) {
             setError('All fields are required.');
             setSuccessMessage('');
             return;
         }
-        // You could add more specific validation (e.g., URL format) here
 
         setLoading(true);
         setError(null);
@@ -43,35 +44,31 @@ const AddCustomerPage = () => {
         };
 
         try {
-            const response = await axios.post(API_ENDPOINT, customerData);
+            // *** Use apiClient and the RELATIVE path ***
+            // The baseURL ('http://5.223.47.56:8000/api' or similar) is in apiClient config
+            const response = await apiClient.post('/customers/create-or-update-from-sheet/', customerData);
 
-            // Handle success based on backend response structure
-            // Assuming backend sends back a message on success
             setSuccessMessage(response.data?.message || 'Customer added successfully!');
-            // console.log('API Response:', response.data); // For debugging
-
-            // Clear the form
             setName('');
             setDidNumber('');
             setSheetUrl('');
-
-            // Refresh the global customer list
-            await fetchCustomers();
-
-            // Optionally navigate away after a short delay
+            await fetchCustomers(); // Refresh the list via context (which also uses apiClient now)
             setTimeout(() => {
-                navigate('/'); // Redirect to home page after success
-            }, 1500); // Wait 1.5 seconds
+                navigate('/');
+            }, 1500);
 
         } catch (err) {
             console.error('Error adding customer:', err);
-            // Handle errors - check for specific response errors from backend if available
             if (err.response && err.response.data) {
-                 // Try to extract specific errors (depends on backend structure)
                  const backendError = err.response.data.error || err.response.data.detail || JSON.stringify(err.response.data);
                  setError(`Failed to add customer: ${backendError}`);
             } else if (err.request) {
-                setError('Failed to add customer: No response from server. Is the backend running?');
+                 // Modify error for connection refused specifically if needed
+                 if (err.code === 'ERR_NETWORK' || err.message.includes('refused')) {
+                    setError('Failed to add customer: Cannot connect to the server. Please check the API URL and ensure the server is running.');
+                 } else {
+                    setError('Failed to add customer: No response from server.');
+                 }
             } else {
                 setError(`Failed to add customer: ${err.message}`);
             }
@@ -80,8 +77,9 @@ const AddCustomerPage = () => {
         }
     };
 
+    // --- JSX for the form remains the same ---
     return (
-        <div className="container mt-4" style={{ maxWidth: '600px' }}> {/* Constrain form width */}
+        <div className="container mt-4" style={{ maxWidth: '600px' }}>
             <h2>Add New Customer</h2>
             <p>Enter the customer details and the Google Sheet URL to fetch their initial data.</p>
 
@@ -95,7 +93,7 @@ const AddCustomerPage = () => {
                         id="customerName"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        required // HTML5 basic validation
+                        required
                         disabled={loading}
                     />
                 </div>
@@ -105,7 +103,6 @@ const AddCustomerPage = () => {
                     <label htmlFor="didNumber" className="form-label">DID Number</label>
                     <input
                         type="text"
-                        // Use pattern for basic format check if desired, e.g., pattern="\d{6,10}"
                         className="form-control"
                         id="didNumber"
                         value={didNumber}
@@ -122,7 +119,7 @@ const AddCustomerPage = () => {
                 <div className="mb-3">
                     <label htmlFor="sheetUrl" className="form-label">Google Sheet URL</label>
                     <input
-                        type="url" // Use type="url" for basic URL validation
+                        type="url"
                         className="form-control"
                         id="sheetUrl"
                         value={sheetUrl}
@@ -144,7 +141,7 @@ const AddCustomerPage = () => {
                 <button
                     type="submit"
                     className="btn btn-primary"
-                    disabled={loading} // Disable button while loading
+                    disabled={loading}
                 >
                     {loading ? (
                         <>

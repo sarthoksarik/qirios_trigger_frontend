@@ -44,13 +44,15 @@ a {
 
 /* --- CORRECTED body Styling --- */
 body {
-  margin: 0; /* Remove default browser margin */
-  /* REMOVE display: flex; */
-  /* REMOVE place-items: center; */
-  min-width: 320px; /* Keep for basic responsiveness */
-  min-height: 100vh; /* Keep so body fills height */
-  /* Ensure default text alignment is left */
-  text-align: left;
+  /* Set the maximum width */
+  max-width: 150px;
+
+  /* Ensure left alignment by NOT using margin: auto */
+  margin-left: 0; /* Or remove if 0 is default */
+  margin-right: 0; /* Or remove if 0 is default */
+
+  /* Keep other desired base body styles */
+  min-height: 100vh;
 }
 /* --- End CORRECTED body --- */
 
