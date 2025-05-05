@@ -1,74 +1,132 @@
 // src/pages/ProfilePage.jsx
-import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react'; // Import useState and useRef
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../hooks/useAppContext';
-// import DemandTitleList from '../components/DemandTitleList'; // *** REMOVE THIS IMPORT ***
-import DataColumns from '../components/DataColumns'; // DataColumns now handles rendering titles and data
+import DataColumns from '../components/DataColumns'; // Assuming this is used for display
 
 const ProfilePage = () => {
-  const { customerId } = useParams(); // Get customerId from URL
-  const {
-      selectCustomer,
-      selectedCustomer,
-      loading,
-      error,
-      customers, // Need customers list to find the one
-      fetchCustomers, // Need fetchCustomers in case navigated directly
-      setError // To set specific errors
-   } = useAppContext();
+    const { customerId } = useParams();
+    const navigate = useNavigate(); // Use navigate if needed for error redirection
 
-  // Effect to fetch customers if navigated directly to this page
-  useEffect(() => {
-      if (customers.length === 0 && !loading) {
-          fetchCustomers();
-      }
-  }, [customers.length, loading, fetchCustomers]);
+    const {
+        customers,
+        loading: contextLoading,
+        error: contextError,
+        selectedCustomer,
+        selectCustomer,
+        fetchCustomers, // Keep for initial load scenario
+        setError,       // Keep for setting errors
+        updateSelectedCustomerFromSheet // *** Get the update function ***
+    } = useAppContext();
 
-  // Effect to select the customer based on the URL parameter
-  useEffect(() => {
-    if (customerId && customers.length > 0) {
-         if (selectedCustomer?.did_number !== customerId) {
-            selectCustomer(customerId);
-         }
-    } else if (customerId && !loading && customers.length === 0 && !error) {
-        // Added !error check to avoid setting error if fetch failed
-         setError(`Attempted to load profile ${customerId}, but customer list is empty.`);
-    }
-  }, [customerId, selectCustomer, customers, loading, selectedCustomer, setError, error]); // Added error to dependency array
+    // --- State and Ref for managing initial update ---
+    // State to track if the selection based on URL has been processed by the first effect
+    const [initialSelectionProcessed, setInitialSelectionProcessed] = useState(false);
+    // Ref to ensure the update API call is triggered only once per direct load
+    const hasTriggeredInitialUpdate = useRef(false);
+
+    // --- Effect 1: Handle initial customer fetch (if needed) ---
+    useEffect(() => {
+        // If navigated directly and list is empty, fetch it
+        if (customers.length === 0 && !contextLoading) {
+            console.log("ProfilePage Effect 1a: Customer list empty, fetching...");
+            fetchCustomers();
+        }
+    }, [customers.length, contextLoading, fetchCustomers]);
 
 
-  // Render Logic
-  return (
-    // Container div provided by <Outlet /> in Layout.jsx
-    // Removed the extra wrapper div from previous example
-    <>
-       {/* Loading Indicator */}
-       {loading && <p>Loading customer profile...</p>}
+    // --- Effect 2: Select customer based on URL ---
+    useEffect(() => {
+        console.log(`ProfilePage Effect 2 (Select): URL=${customerId}, Loading=${contextLoading}, Customers=${customers.length}, Selected=${selectedCustomer?.did_number}`);
+        setInitialSelectionProcessed(false); // Reset flag when dependencies change
 
-       {/* Error Display */}
-       {error && !loading && <p className="text-danger">{error}</p>}
+        if (customerId && !contextLoading && customers.length > 0) {
+            const customerExists = customers.some(c => c.did_number === customerId);
 
-       {/* Render data columns ONLY if the correct customer is selected and no errors/loading */}
-       {selectedCustomer && selectedCustomer.did_number === customerId && !loading && !error && (
-           <>
-             {/* Optional: Heading for the profile */}
-             {/* <h5 className="mb-3">Details for {selectedCustomer.name}</h5> */}
+            if (!customerExists) {
+                console.error(`ProfilePage Effect 2: Customer ${customerId} not found in list.`);
+                setError(`Customer with ID ${customerId} not found.`); // Set context error
+                return; // Stop processing this effect
+            }
 
-             {/* Render ONLY DataColumns - It includes the Title List internally */}
-             <DataColumns />
+            // If customer exists, check if selection needs update
+            if (selectedCustomer?.did_number !== customerId) {
+                console.log(`ProfilePage Effect 2: Selecting customer ${customerId}.`);
+                selectCustomer(customerId);
+                // Mark that selection based on URL was attempted/done
+                setInitialSelectionProcessed(true);
+            } else {
+                // Already selected - mark selection as processed for this URL ID
+                 console.log(`ProfilePage Effect 2: Customer ${customerId} already selected.`);
+                setInitialSelectionProcessed(true);
+            }
+        } else if (customerId && !contextLoading && customers.length === 0 && !contextError) {
+             console.warn(`ProfilePage Effect 2: Attempted load for ${customerId}, but customer list is empty.`);
+             setError(`Attempted to load profile ${customerId}, but customer list is empty.`);
+             setInitialSelectionProcessed(false); // Ensure flag is false if list is empty
+        } else {
+            setInitialSelectionProcessed(false); // Reset if conditions aren't met
+        }
 
-             {/* *** REMOVED <DemandTitleList /> from here *** */}
-           </>
-        )}
+    }, [customerId, contextLoading, customers, selectedCustomer, selectCustomer, setError, contextError]); // Dependencies for selection logic
 
-        {/* Handle case where ID is in URL but customer not found after load attempt */}
-        {!selectedCustomer && !loading && error && customerId && error.includes(customerId) && (
-            <div className="p-3 bg-warning-subtle rounded text-center">
-                 <p className="mb-0">Could not find customer with ID: {customerId}</p>
-            </div>
-        )}
-     </>
-  );
+
+    // --- Effect 3: Trigger update after selection is confirmed ---
+    useEffect(() => {
+        console.log(`ProfilePage Effect 3 (Update Check): Processed=${initialSelectionProcessed}, TriggeredRef=${hasTriggeredInitialUpdate.current}, SelectedDID=${selectedCustomer?.did_number}, URL_DID=${customerId}`);
+
+        // Trigger update only if:
+        // 1. The selection process based on the URL ID is marked as processed.
+        // 2. The *currently* selected customer in context actually matches the URL ID.
+        // 3. The initial update trigger hasn't happened yet for this component instance/load.
+        if (initialSelectionProcessed && selectedCustomer?.did_number === customerId && !hasTriggeredInitialUpdate.current) {
+            console.log(`ProfilePage Effect 3: Triggering initial update for ${customerId}.`);
+
+            // Prevent triggering again on this load
+            hasTriggeredInitialUpdate.current = true;
+
+            // Call the context function to trigger the update
+            updateSelectedCustomerFromSheet();
+
+            setInitialSelectionProcessed(false); // Reset intermediate state
+        }
+
+    // Depend on the intermediate state, the selected customer, the URL id, and the update function itself
+    }, [initialSelectionProcessed, selectedCustomer, customerId, updateSelectedCustomerFromSheet]);
+
+
+    // --- Render Logic (Similar to your previous version) ---
+    return (
+        <>
+            {/* Loading Indicator - Show if context is loading AND selected doesn't match URL yet */}
+            {contextLoading && selectedCustomer?.did_number !== customerId && (
+                 <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '150px' }}>
+                    <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Display */}
+            {contextError && !contextLoading && (
+                 // Show context error if it exists after loading
+                 <div className="alert alert-danger">Error: {contextError}</div>
+            )}
+
+            {/* Render data columns ONLY if loading is done, no error, and correct customer is selected */}
+            {selectedCustomer && selectedCustomer.did_number === customerId && !contextLoading && !contextError && (
+                <>
+                    {/* <h5 className="mb-3">Details for {selectedCustomer.name}</h5> */}
+                    <DataColumns />
+                </>
+            )}
+
+            {/* Specific "Not Found" message if loading is done, error exists, and it matches the expected "not found" pattern */}
+            {!contextLoading && contextError && typeof contextError === 'string' && contextError.includes(customerId) && (
+                 <div className="alert alert-warning">Could not find customer with ID: {customerId}</div>
+            )}
+        </>
+    );
 };
 
 export default ProfilePage;

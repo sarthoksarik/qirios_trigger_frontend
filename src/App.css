@@ -1,1 +1,15 @@
+/* Add this to your CSS file */
 
+.content-wrapper {
+    /* Define default state/transitions if needed */
+    transition: max-width 0.2s ease-out;
+    max-width: none; /* Default */
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .content-wrapper.narrow-view-active {
+    /* Styles when the checkbox is checked */
+    max-width: 66.67%; /* Restrict width */
+    /* Stays left-aligned because no margin: auto is applied */
+  }

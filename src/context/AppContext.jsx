@@ -1,150 +1,142 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+// src/context/AppContext.js
 
-// Define the base URL for your Django API (Adjust if necessary)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'; // Fallback for safety
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+// Remove the default axios import
+// import axios from 'axios';
+// Import the configured apiClient instance
+import apiClient from '../api/axiosConfig'; // Adjust the path if necessary!
+
+// Define the base URL (now likely handled within apiClient, but keep for reference if needed elsewhere)
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
 const AppContext = createContext();
 
 const AppProvider = ({ children }) => {
-    // --- State Variables ---
+    // --- State Variables (Unchanged) ---
     const [customers, setCustomers] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [selectedTitle, setSelectedTitle] = useState(null);
     const [selectedDemand, setSelectedDemand] = useState(null);
-    const [selectedPatientType, setSelectedPatientType] = useState(null); // Still needed for highlighting UI
-    const [selectedActions, setSelectedActions] = useState([]); // Actions selected in the bar
-    const [loading, setLoading] = useState(false); // For initial customer list load
-    const [error, setError] = useState(null); // For list load/selection errors
-
-    // State for the update operation initiated from the navbar button
+    const [selectedPatientType, setSelectedPatientType] = useState(null);
+    const [currentActions, setCurrentActions] = useState([]); // Renamed state
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [isUpdatingCustomer, setIsUpdatingCustomer] = useState(false);
     const [updateError, setUpdateError] = useState(null);
     const [updateSuccessMessage, setUpdateSuccessMessage] = useState('');
     // --- End State Variables ---
 
     // --- Data Fetching ---
+    // Use apiClient
     const fetchCustomers = useCallback(async () => {
         setLoading(true);
         setError(null);
-        const targetUrl = `${API_BASE_URL}/customers/`
-        console.log("Fetching customers from:", targetUrl); 
+        // Base URL is now part of apiClient configuration
+        // const targetUrl = `/customers/` // Relative path
+        console.log("Fetching customers...");
         try {
-            const response = await axios.get(targetUrl);
-            console.log("API Response Status:", response.status); // <-- ADDED LOG
-            console.log("API Response Data:", response.data); // <-- ADDED LOG (Crucial!)
-            // Safer check before setting state
+            // Use apiClient instance
+            const response = await apiClient.get('/customers/');
+            console.log("API Response Status:", response.status);
+            console.log("API Response Data:", response.data);
             setCustomers(Array.isArray(response.data) ? response.data : [])
         } catch (err) {
             console.error("Error fetching customers:", err);
-            setError("Failed to load customer data. Please ensure the backend is running.");
+            setError("Failed to load customer data. Please ensure the backend is running and CORS/CSRF settings are correct.");
             setCustomers([]);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, []); // No state dependencies needed here
 
     // Fetch customers when the provider mounts
     useEffect(() => {
         fetchCustomers();
     }, [fetchCustomers]);
 
-    // --- Selection Logic ---
+    // --- Selection Logic (Unchanged logic, but ensure context value is updated) ---
     const selectCustomer = useCallback((customerDid) => {
-        // Clear previous status messages
         setUpdateError(null);
         setUpdateSuccessMessage('');
-        setError(null); // Also clear general errors
-
-        setLoading(true);
+        setError(null);
+        setLoading(true); // Keep loading state for selection feedback if needed
         const customer = customers.find(c => c.did_number === customerDid);
         if (customer) {
             setSelectedCustomer(customer);
-            // Reset downstream selections
             setSelectedTitle(null);
             setSelectedDemand(null);
             setSelectedPatientType(null);
-            setSelectedActions([]); // Clear actions bar when customer changes
+            setCurrentActions([]);
         } else {
+            // Set error if customer not found in the loaded list
             setError(`Customer with ID ${customerDid} not found.`);
-            setSelectedCustomer(null); // Clear selection if not found
+            setSelectedCustomer(null);
         }
         setLoading(false);
-    }, [customers]);
+    }, [customers]); // Depends on the main customer list
 
-    const selectTitle = (title) => {
+    const selectTitle = useCallback((title) => {
         setSelectedTitle(title);
-        // Reset downstream selections
         setSelectedDemand(null);
         setSelectedPatientType(null);
-        // Clear status messages
+        setCurrentActions([]);
         setUpdateError(null);
         setUpdateSuccessMessage('');
-    };
+        setError(null); // Clear general errors too
+    }, []); // No state dependencies
 
-    const selectDemand = (demand) => {
+    const selectDemand = useCallback((demand) => {
         setSelectedDemand(demand);
-        // Reset patient type selection
         setSelectedPatientType(null);
-         // Clear status messages
+        setCurrentActions([]);
         setUpdateError(null);
         setUpdateSuccessMessage('');
-    };
-    // --- End Selection Logic ---
+        setError(null); // Clear general errors too
+    }, []); // No state dependencies
 
-
-    // --- Action Management (for Selection Bar) ---
-    const addAction = useCallback((action) => {
-        // Ensure action has a description and isn't already selected
-        if (action && action.description && !selectedActions.some(sa => sa.description === action.description)) {
-            setSelectedActions(prev => [...prev, action]);
+    // --- Action Management (using currentActions) ---
+    const removeCurrentAction = useCallback((actionToRemove) => {
+        if (actionToRemove?.description) {
+            setCurrentActions(prev => prev.filter(action => action.description !== actionToRemove.description));
         }
-    }, [selectedActions]); // Dependency: selectedActions
+    }, []); // No state dependencies
 
-    const removeAction = (actionToRemove) => {
-        setSelectedActions(prev => prev.filter(action => action.description !== actionToRemove.description));
-    };
+    const clearCurrentActions = useCallback(() => {
+        setCurrentActions([]);
+    }, []); // No state dependencies
 
-    const clearActions = () => {
-        setSelectedActions([]);
-    };
-    // --- End Action Management ---
-
-
-    // --- MODIFIED selectPatientType ---
-    // Now also adds all actions of the selected type to the Selection Bar
+    // Sets actions based on selected patient type
     const selectPatientType = useCallback((patientType) => {
-        // 1. Set state to highlight the selected Patient Type in the UI
         setSelectedPatientType(patientType);
-
-        // 2. Add all actions associated with this patientType to the selection bar
-        if (patientType && patientType.actions && patientType.actions.length > 0) {
-            console.log(`Adding actions for Patient Type: ${patientType.name}`);
-            // Use a temporary set to avoid potential issues if addAction wasn't memoized correctly
-            // or if state updates aren't immediate within the loop (though addAction handles duplicates now)
-            patientType.actions.forEach(action => {
-                addAction(action); // Call memoized addAction which handles duplicates
-            });
+        if (patientType && Array.isArray(patientType.actions)) {
+            console.log(`Setting actions for Patient Type: ${patientType.name}`);
+            setCurrentActions(patientType.actions);
         } else {
-             console.log(`No actions to add for Patient Type: ${patientType?.name}`);
+            console.log(`Clearing actions (no valid actions for Patient Type: ${patientType?.name})`);
+            setCurrentActions([]);
         }
-         // Clear status messages
         setUpdateError(null);
         setUpdateSuccessMessage('');
+        setError(null); // Clear errors
+    }, []); // No state dependencies
 
-    }, [addAction]); // Dependency: addAction function (which depends on selectedActions)
-
-
-    // --- Function to Update Selected Customer From Sheet (Navbar Button) ---
+    // --- Function to Update Selected Customer From Sheet ---
+    // Use apiClient
     const updateSelectedCustomerFromSheet = useCallback(async () => {
+        // Function might be called before selection is fully settled, ensure selectedCustomer exists
         if (!selectedCustomer) {
+            console.warn("Update triggered but no customer selected.");
             setUpdateError("No customer selected to update.");
-            setTimeout(() => setUpdateError(null), 5000);
+            // Optional: Clear message after timeout
+            // setTimeout(() => setUpdateError(null), 5000);
             return;
         }
 
+        console.log(`Attempting update for: ${selectedCustomer.did_number}`);
         setIsUpdatingCustomer(true);
         setUpdateError(null);
         setUpdateSuccessMessage('');
+        setError(null); // Clear general errors
 
         const updateData = {
             name: selectedCustomer.name,
@@ -153,72 +145,98 @@ const AppProvider = ({ children }) => {
         };
 
         try {
-            // POST to the backend endpoint
-            const response = await axios.post(`${API_BASE_URL}/customers/create-or-update-from-sheet/`, updateData);
-            setUpdateSuccessMessage(response.data?.message || 'Update triggered! Refreshing...');
+            // Use apiClient instance for the POST request
+            const response = await apiClient.post('/customers/create-or-update-from-sheet/', updateData);
+            console.log('Update API response:', response.data);
+            setUpdateSuccessMessage(response.data?.message || 'Update triggered successfully! Refreshing data...');
 
             // Refresh the selected customer's data locally after successful POST
             try {
-                const refreshResponse = await axios.get(`${API_BASE_URL}/customers/${selectedCustomer.did_number}/`);
-                setSelectedCustomer(refreshResponse.data); // Update state with fresh data
-                // Reset selections below customer level
-                setSelectedTitle(null);
-                setSelectedDemand(null);
-                setSelectedPatientType(null);
-                setSelectedActions([]); // Clear actions bar after update
-                setUpdateSuccessMessage('Customer data refreshed successfully!');
+                console.log(`Refreshing data for ${selectedCustomer.did_number}`);
+                // Use apiClient instance for the GET request
+                const refreshResponse = await apiClient.get(`/customers/${selectedCustomer.did_number}/`);
+                // Update local state ONLY if the refreshed customer still matches the selection
+                // Prevents race conditions if user clicks elsewhere during update
+                if(selectedCustomer && refreshResponse.data?.did_number === selectedCustomer.did_number){
+                    setSelectedCustomer(refreshResponse.data);
+                    // Reset selections below customer level as data might have changed
+                    setSelectedTitle(null);
+                    setSelectedDemand(null);
+                    setSelectedPatientType(null);
+                    clearCurrentActions(); // Use the existing clear function
+                    setUpdateSuccessMessage('Customer data refreshed successfully!');
+                    console.log('Customer data refreshed successfully.');
+                } else {
+                     console.log('Selected customer changed during refresh, not updating local state.');
+                     // Don't clear the success message here, update was likely still successful
+                }
 
             } catch (refreshErr) {
                 console.error("Error refreshing customer data after update:", refreshErr);
+                // Keep the initial success message, but add warning about refresh failure
                 setUpdateError("Update submitted, but failed to refresh local data. Please re-select the customer manually.");
-                setTimeout(() => setUpdateError(null), 7000);
+                // Optional: Clear error after timeout
+                // setTimeout(() => setUpdateError(null), 7000);
             }
 
-            setTimeout(() => setUpdateSuccessMessage(''), 3000); // Clear success message
+            // Optional: Clear success message after timeout
+            // setTimeout(() => setUpdateSuccessMessage(''), 3000);
 
         } catch (err) {
             console.error("Error updating customer:", err);
-             if (err.response && err.response.data) {
-                const backendError = err.response.data.error || err.response.data.detail || JSON.stringify(err.response.data);
+            // Extract more specific error message if possible
+             if (err.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error("Error Response Data:", err.response.data);
+                console.error("Error Response Status:", err.response.status);
+                console.error("Error Response Headers:", err.response.headers);
+                const backendError = err.response.data?.error || err.response.data?.detail || `Server responded with status ${err.response.status}`;
                 setUpdateError(`Update failed: ${backendError}`);
             } else if (err.request) {
-                setUpdateError('Update failed: No response from server.');
+                // The request was made but no response was received
+                console.error("Error Request:", err.request);
+                setUpdateError('Update failed: No response from server. Is it running?');
             } else {
+                // Something happened in setting up the request that triggered an Error
+                console.error('Error Message:', err.message);
                 setUpdateError(`Update failed: ${err.message}`);
             }
-            setTimeout(() => setUpdateError(null), 5000); // Clear error message
+            // Optional: Clear error message after timeout
+            // setTimeout(() => setUpdateError(null), 5000);
         } finally {
             setIsUpdatingCustomer(false);
         }
 
-    }, [selectedCustomer, addAction]); // Dependency: selectedCustomer and addAction
+    // Dependencies: selectedCustomer is needed to get data for the request.
+    // clearCurrentActions is called.
+    // Other state setters (setIsUpdatingCustomer, etc.) are stable and don't need to be dependencies.
+    }, [selectedCustomer, clearCurrentActions]);
     // --- End Update Function ---
 
 
-    // --- Context Value ---
-    // Assemble the state and functions provided by the context
+    // --- Context Value (Ensure all exported functions/state are correct) ---
     const value = {
         customers,
         selectedCustomer,
         selectedTitle,
         selectedDemand,
-        selectedPatientType, // Still needed for highlighting Patient Type column
-        selectedActions,
+        selectedPatientType,
+        currentActions, // Use the renamed state
         loading,
-        error,
+        error, // General fetch/select errors
         fetchCustomers,
         selectCustomer,
         selectTitle,
         selectDemand,
-        selectPatientType, // Provide the modified version
-        addAction,
-        removeAction,
-        clearActions,
-        setError,
-        isUpdatingCustomer,
-        updateError,
-        updateSuccessMessage,
-        updateSelectedCustomerFromSheet,
+        selectPatientType,
+        removeCurrentAction, // Renamed function
+        clearCurrentActions, // Renamed function
+        setError, // Allow components to set general errors if needed
+        isUpdatingCustomer, // Update-specific loading state
+        updateError, // Update-specific error message
+        updateSuccessMessage, // Update-specific success message
+        updateSelectedCustomerFromSheet, // The update function
     };
     // --- End Context Value ---
 
