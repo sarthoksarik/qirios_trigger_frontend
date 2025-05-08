@@ -4,134 +4,85 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../hooks/useAppContext';
 
 const CustomerSelector = () => {
+  // Get only what's needed for the grid view
   const { customers, selectedCustomer, selectCustomer, loading, error } = useAppContext();
   const navigate = useNavigate();
 
-  const handleSelectChange = (event) => {
-    const did = event.target.value;
-    if (did) {
-      selectCustomer(did);
-      navigate(`/profile/${did}`);
-    } else {
-      selectCustomer(null);
-      navigate('/');
-    }
-  };
-
+  // --- Handler for Grid Button Click ---
   const handleButtonClick = (did) => {
-      selectCustomer(did);
-      navigate(`/profile/${did}`);
+      selectCustomer(did); // Select in context
+      navigate(`/profile/${did}`); // Navigate to profile
   };
 
-  // Helper to determine display text, prioritizing filetitle
-  const getDisplayText = (customer) => {
+  // --- Helpers for display text (Copied from original) ---
+  const getDisplayText = (customer) => { // For tooltip
       const title = customer.filetitle?.trim();
       const name = customer.name?.trim();
-      if (title) {
-          // Format: Spreadsheet Title (Customer Name)
-          return `${title}${name ? ` (${name})` : ''}`;
-      } else if (name) {
-          // Fallback to Customer Name (DID) if no filetitle
-          return `${name} (${customer.did_number})`;
-      } else {
-           // Fallback if neither title nor name exists
-           return `Customer (${customer.did_number})`;
-      }
+      if (title) { return `${title}${name ? ` (${name})` : ''}`; }
+      else if (name) { return `${name} (${customer.did_number})`; }
+      else { return `Customer (${customer.did_number})`; }
   };
-
-  // Helper for button grid text (maybe slightly different format)
-   const getButtonText = (customer) => {
+   const getButtonText = (customer) => { // For button content
         const title = customer.filetitle?.trim();
         const name = customer.name?.trim();
         if (title) {
-            return ( // Return JSX for multi-line content
+            return (
                  <>
-                    <span style={{ fontWeight: 500 }}>{title}</span>
+                    <span style={{ fontWeight: 500, fontSize: '0.75rem' }}>{title}</span> {/* Smaller main text */}
                     {name && <br />}
-                    {name && <small className="text-muted">({name})</small>}
+                    {/* Even smaller secondary text */}
+                    {name && <small className="text-muted" style={{ fontSize: '0.65rem' }}>({name})</small>}
                  </>
             );
         } else if (name) {
              return (
                  <>
-                    <span style={{ fontWeight: 500 }}>{name}</span>
+                    <span style={{ fontWeight: 500, fontSize: '0.75rem' }}>{name}</span> {/* Smaller main text */}
                     <br />
-                    <small className="text-muted">({customer.did_number})</small>
+                    <small className="text-muted" style={{ fontSize: '0.65rem' }}>({customer.did_number})</small> {/* Smaller DID */}
                  </>
              );
         } else {
-            return `Customer (${customer.did_number})`;
+            return <span style={{ fontSize: '0.7rem' }}>Cust ({customer.did_number})</span>; // Fallback small text
         }
    };
 
+  // --- Only render grid if not loading, no error, and customers exist ---
+  if (loading || error || !customers || customers.length === 0) {
+    // Don't render the grid container if there's nothing to show or loading/error
+    // Error/loading messages handled elsewhere potentially (like Navbar or below)
+    return null;
+  }
 
   return (
-    // Reduce overall padding (p-2) and bottom margin (mb-3)
-    <div className="mb-3 p-2 bg-light rounded shadow-sm">
-      {/* Use h6 and small font size */}
-      <h6 className="mb-2" style={{ fontSize: '0.95rem' }}>Select Customer</h6>
-
-      {/* Dropdown Selector Section */}
-      <div className="mb-2"> {/* Reduced margin */}
-        {/* Use label with smaller font */}
-        {/* <label htmlFor="customerDropdown" className="form-label form-label-sm mb-1">By Dropdown:</label> */}
-        {loading && !customers.length && <p><small>Loading customers...</small></p>}
-        {error && !loading && <p className="text-danger mb-1"><small>{error}</small></p>}
-        {!loading && customers.length > 0 && (
-          <select
-            id="customerDropdown"
-            className="form-select form-select-sm" // Use smaller select control
-            value={selectedCustomer?.did_number || ''}
-            onChange={handleSelectChange}
-            aria-label="Select Customer Dropdown"
-          >
-            <option value="">-- Select Customer --</option>
-            {customers.map((customer) => (
-              <option key={customer.did_number} value={customer.did_number}>
-                {/* Display filetitle (Customer Name) */}
-                {getDisplayText(customer)}
-              </option>
-            ))}
-          </select>
-        )}
-        {!loading && !error && customers.length === 0 && (
-          <p><small>No customers found.</small></p>
-        )}
-      </div>
-
-      {/* Grid Selector Section - Appears below the dropdown */}
-      <div>
-        {/* <label className="form-label form-label-sm mb-1">By Grid:</label> */}
-         {/* Reduce max-height for shorter scroll area */}
-         {/* Show grid only if customers are loaded */}
-         {!loading && customers.length > 0 && (
-             <div
-               className="d-flex flex-wrap gap-1 border p-1 rounded" // Reduced gap, padding
-               style={{ maxHeight: '120px', overflowY: 'auto' }} // Reduced max height significantly
-             >
-                 {customers.map((customer) => (
-                     <button
-                         key={customer.did_number}
-                         type="button"
-                         // Keep btn-sm, adjust padding if needed via custom class or inline style
-                         className={`btn btn-sm ${selectedCustomer?.did_number === customer.did_number ? 'btn-primary' : 'btn-outline-secondary'}`}
-                         onClick={() => handleButtonClick(customer.did_number)}
-                         style={{
-                             flex: '1 0 auto', // Let buttons size more naturally but allow wrapping
-                             fontSize: '0.75rem', // Smaller font size for buttons
-                             lineHeight: '1.2', // Adjust line height for smaller text
-                             padding: '0.2rem 0.4rem' // Adjust padding
-                            }}
-                         title={getDisplayText(customer)} // Tooltip shows full info
-                     >
-                         {/* Display filetitle / name in button */}
-                        {getButtonText(customer)}
-                     </button>
-                 ))}
-             </div>
-          )}
-      </div>
-
+    // --- Main Container: Reduced padding/margin ---
+    <div className="mb-2 p-1 bg-light rounded shadow-sm"> {/* Reduced mb-2 p-1 */}
+        {/* Grid Section */}
+         <div
+           // Reduced gap, padding; keep other classes
+           className="d-flex flex-wrap gap-1 border p-1 rounded"
+           // Reduced max-height further, ensure scrolling
+           style={{ maxHeight: '90px', overflowY: 'auto', overflowX: 'hidden' }}
+         >
+             {customers.map((customer) => (
+                 <button
+                     key={customer.did_number}
+                     type="button"
+                     // Added btn-xs equivalent using padding/font-size
+                     className={`btn btn-sm ${selectedCustomer?.did_number === customer.did_number ? 'btn-primary' : 'btn-outline-secondary'}`}
+                     onClick={() => handleButtonClick(customer.did_number)}
+                     style={{
+                         flex: '1 0 auto', // Keep flex behavior
+                         fontSize: '0.7rem', // Make overall button font smaller
+                         lineHeight: '1.1', // Tighter line height
+                         padding: '0.15rem 0.3rem' // Smaller padding -> "btn-xs" feel
+                        }}
+                     title={getDisplayText(customer)} // Tooltip shows full info
+                 >
+                    {getButtonText(customer)}
+                 </button>
+             ))}
+         </div>
     </div> // End of main container
   );
 };

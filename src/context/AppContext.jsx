@@ -36,6 +36,7 @@ const AppProvider = ({ children }) => {
         console.log("Fetching customers...");
         try {
             // Use apiClient instance
+            console.log(import.meta.env.VITE_API_BASE_URL)
             const response = await apiClient.get('/customers/');
             console.log("API Response Status:", response.status);
             console.log("API Response Data:", response.data);

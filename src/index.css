@@ -45,7 +45,7 @@ a {
 /* --- CORRECTED body Styling --- */
 body {
   /* Set the maximum width */
-  max-width: 150px;
+  max-width: 465px;
 
   /* Ensure left alignment by NOT using margin: auto */
   margin-left: 0; /* Or remove if 0 is default */
