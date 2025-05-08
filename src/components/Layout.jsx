@@ -17,7 +17,7 @@ const Layout = () => {
   return (
     <>
       <Navbar />
-      <div className="container-fluid mt-3 px-md-4">
+      <div className="container-fluid px-md-4" style={{marginTop: 0, ["--bs-gutter-x"]: "0"}}>
         <div style={{
             position: 'sticky',
             top: 0,

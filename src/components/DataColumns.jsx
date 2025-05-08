@@ -90,12 +90,12 @@ const DataColumns = () => {
                                         display: 'flex', alignItems: 'center', fontWeight: '500'
                                     }}
                                 >
-                                    <small style={{ fontSize: '0.85rem' }}>{demand.name}</small>
+                                    <small style={{ fontSize: '0.79rem' }}>{demand.name}</small>
                                 </div>
 
                                 {/* Right Side: List of Patient Types */}
                                 <div
-                                    className="p-2" // Padding
+                                    className="p-0" // Padding
                                     style={{ flexGrow: 1, flexBasis: '60%', backgroundColor: 'white' }} // Fill space, white background
                                 >
                                     {patientTypes.length > 0 ? (
@@ -113,7 +113,7 @@ const DataColumns = () => {
                                                     <div
                                                         key={typeKey}
                                                         className={`patient-type-item p-1 ${patientTypes.length > 1 && typeIndex < patientTypes.length - 1 ? 'border-bottom' : ''} ${isSelectedType ? 'bg-info-subtle rounded-1' : ''}`} // Highlight if selected
-                                                        style={{ cursor: 'pointer', fontSize: '0.85rem', transition: 'background-color 0.2s ease', marginLeft: '-0.5rem', marginRight: '-0.5rem' }}
+                                                        style={{ cursor: 'pointer', fontSize: '0.79rem', transition: 'background-color 0.2s ease'}}
                                                         onClick={() => selectPatientType(patientType)} // Select and add actions
                                                         onMouseEnter={(e) => !isSelectedType && (e.currentTarget.style.backgroundColor = '#eef2f7')} // Hover effect
                                                         onMouseLeave={(e) => !isSelectedType && (e.currentTarget.style.backgroundColor = 'transparent')}

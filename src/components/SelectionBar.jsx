@@ -43,7 +43,7 @@ const SelectionBar = () => {
               className="text-wrap me-1" // Reduced margin-end to me-1
               // Apply significantly smaller font size using inline style
               // 0.7rem is ~70% of standard 1rem, 0.6rem is 60% etc. Adjust as needed.
-              style={{ fontSize: '0.7rem', lineHeight: '1.2' }} // Added line-height for tight spacing
+              style={{ fontSize: '0.95rem', lineHeight: '1.3' }} // Added line-height for tight spacing
             >
               {action.description}
             </span>
