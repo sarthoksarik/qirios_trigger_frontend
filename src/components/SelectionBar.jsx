@@ -45,7 +45,14 @@ const SelectionBar = () => {
               // 0.7rem is ~70% of standard 1rem, 0.6rem is 60% etc. Adjust as needed.
               style={{ fontSize: '0.95rem', lineHeight: '1.3' }} // Added line-height for tight spacing
             >
-              {action.description}
+              {action.description
+  .split(/<br\s*\/?>|\n/)
+  .map((part, idx) => (
+    <React.Fragment key={idx}>
+      {part}
+      <br />
+    </React.Fragment>
+  ))}
             </span>
 
             {/* --- Remove Button: Keep small version --- */}
