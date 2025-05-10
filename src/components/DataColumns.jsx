@@ -51,8 +51,8 @@ const DataColumns = () => {
                 {/* Show header only if a title is selected */}
                  {selectedTitle && (
                     <div className="d-none d-md-flex row gx-2 px-2 pb-1 fw-bold text-secondary border-top bg-light">
-                        <div className="col-5" style={{fontSize: '0.9rem'}}>Demand</div>
-                        <div className="col-7" style={{fontSize: '0.9rem'}}>Patient Type (Click to Add Actions)</div>
+                        {/* <div className="col-5" style={{fontSize: '0.9rem'}}>Demand</div>
+                        <div className="col-7" style={{fontSize: '0.9rem'}}>Patient Type (Click to Add Actions)</div> */}
                     </div>
                  )}
             </div>
