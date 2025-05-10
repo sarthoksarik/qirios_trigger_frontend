@@ -18,7 +18,7 @@ const CustomerSelector = () => {
   const getDisplayText = (customer) => { // For tooltip
       const title = customer.filetitle?.trim();
       const name = customer.name?.trim();
-      if (title) { return `${title}${name ? ` (${name})` : ''}`; }
+      if (title) { return `${title}`; }
       else if (name) { return `${name} (${customer.did_number})`; }
       else { return `Customer (${customer.did_number})`; }
   };
@@ -66,7 +66,13 @@ const CustomerSelector = () => {
            // Reduced max-height further, ensure scrolling
            style={{ maxHeight: '90px', overflowY: 'auto', overflowX: 'hidden' }}
          >
-             {customers.map((customer) => (
+             {[...customers]
+  .sort((a, b) => {
+    const getNum = (title) => parseInt((title || '').split('-')[0], 10) || 0;
+    return getNum(a.filetitle) - getNum(b.filetitle);
+  })
+  .map((customer) => (
+
                  <button
                      key={customer.did_number}
                      type="button"
