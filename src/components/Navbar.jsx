@@ -51,11 +51,20 @@ const Navbar = () => {
                     style={{ fontSize: '0.8rem' }}
                 >
                     <option value="" style={{ fontStyle: 'italic' }}>-- Select Customer --</option>
-                    {customers.map((customer) => (
-                    <option key={customer.did_number} value={customer.did_number}>
-                        {getDisplayText(customer)}
-                    </option>
-                    ))}
+                    {[...customers]
+  .sort((a, b) => {
+    const getPrefixNumber = (str) => {
+      const match = str?.match(/^(\d+)-/);
+      return match ? parseInt(match[1], 10) : Infinity;
+    };
+
+    return getPrefixNumber(a.filetitle) - getPrefixNumber(b.filetitle);
+  })
+  .map((customer) => (
+    <option key={customer.did_number} value={customer.did_number}>
+      {getDisplayText(customer)}
+    </option>
+))}
                 </select>
             </div>
         )}
@@ -114,7 +123,7 @@ const Navbar = () => {
                 to="/add-customer"
                 style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}
               >
-                + Add New
+                + Add
               </Link>
             </li>
           </ul>

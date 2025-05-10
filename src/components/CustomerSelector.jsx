@@ -64,7 +64,7 @@ const CustomerSelector = () => {
            // Reduced gap, padding; keep other classes
            className="d-flex flex-wrap gap-1 border p-1 rounded"
            // Reduced max-height further, ensure scrolling
-           style={{ maxHeight: '90px', overflowY: 'auto', overflowX: 'hidden' }}
+           style={{ maxHeight: '90px', overflowY: 'auto', overflowX: 'hidden'}}
          >
              {[...customers]
   .sort((a, b) => {
@@ -80,11 +80,13 @@ const CustomerSelector = () => {
                      className={`btn btn-sm ${selectedCustomer?.did_number === customer.did_number ? 'btn-primary' : 'btn-outline-secondary'}`}
                      onClick={() => handleButtonClick(customer.did_number)}
                      style={{
-                         flex: '1 0 auto', // Keep flex behavior
-                         fontSize: '0.65rem', // Make overall button font smaller
-                         lineHeight: '1.1', // Tighter line height
-                         padding: '0.15rem 0.3rem', // Smaller padding -> "btn-xs" feel
-                         width: '50px'
+                        flex: '0 0 19%',         // ⬅️ Each button takes 19% width (4 columns)
+                        maxWidth: '19%',
+                        fontSize: '0.65rem',
+                        lineHeight: '1.1',
+                        padding: '0.15rem 0.3rem',
+                        whiteSpace: 'normal',     // ⬅️ Allows text to wrap if needed
+                        wordWrap: 'break-word'
                         }}
                      title={getDisplayText(customer)} // Tooltip shows full info
                  >
