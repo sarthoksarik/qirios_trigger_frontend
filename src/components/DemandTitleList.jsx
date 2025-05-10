@@ -13,7 +13,7 @@ const DemandTitleList = () => {
 
   return (
     // Main container for the title list section
-    <div className="mb-3 pb-2 border-bottom">
+    <div className="pb-2 border-bottom">
         {/* Container for the buttons */}
         {/*
           - Replace flex-row with flex-wrap to allow wrapping

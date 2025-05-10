@@ -1,12 +1,12 @@
 // src/pages/ProfilePage.jsx
 import React, { useEffect, useState, useRef } from 'react'; // Import useState and useRef
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAppContext } from '../hooks/useAppContext';
 import DataColumns from '../components/DataColumns'; // Assuming this is used for display
 
 const ProfilePage = () => {
     const { customerId } = useParams();
-    const navigate = useNavigate(); // Use navigate if needed for error redirection
+    //const navigate = useNavigate(); // Use navigate if needed for error redirection
 
     const {
         customers,
