@@ -165,7 +165,7 @@ const AppProvider = ({ children }) => {
                     setSelectedDemand(null);
                     setSelectedPatientType(null);
                     clearCurrentActions(); // Use the existing clear function
-                    setUpdateSuccessMessage('Customer data refreshed successfully!');
+                    //setUpdateSuccessMessage('Customer data refreshed successfully!');
                     console.log('Customer data refreshed successfully.');
                 } else {
                      console.log('Selected customer changed during refresh, not updating local state.');

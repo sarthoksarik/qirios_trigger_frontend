@@ -93,17 +93,18 @@ const Navbar = () => {
           <ul className="navbar-nav ms-auto align-items-center">
             {/* Update Button */}
             {selectedCustomer && (
-               <li className="nav-item me-1 me-lg-2">
-                 <button
+               <li className="nav-item me-1 me-lg-2" style={{display:'none'}}>
+                 {<button
                    className="btn btn-sm btn-outline-warning d-flex align-items-center"
                    onClick={updateSelectedCustomerFromSheet}
                    disabled={!selectedCustomer || isUpdatingCustomer}
                    title={selectedCustomer ? `Refresh data for ${selectedCustomer.name} from sheet` : 'Select a customer first'}
-                   style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}
+                   style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', display:'none'}}
+                   
                  >
                     {/* ... Button Content ... */}
                    {isUpdatingCustomer ? ( <>...</> ) : ( <>Updt</> )}
-                 </button>
+                 </button>}
                </li>
              )}
             {/* Add New Customer Button/Link */}

@@ -25,13 +25,15 @@ const CustomerSelector = () => {
    const getButtonText = (customer) => { // For button content
         const title = customer.filetitle?.trim();
         const name = customer.name?.trim();
+        //console.log(title)
+        //const did = customer.did?.trim();
         if (title) {
             return (
                  <>
-                    <span style={{ fontWeight: 500, fontSize: '0.75rem' }}>{title}</span> {/* Smaller main text */}
-                    {name && <br />}
+                    <span style={{ fontWeight: 500, fontSize: '0.65rem' }}>{title}</span> {/* Smaller main text */}
+                    {/* {name && <br />}*/}
                     {/* Even smaller secondary text */}
-                    {name && <small className="text-muted" style={{ fontSize: '0.65rem' }}>({name})</small>}
+                    {/* {name && <small className="text-muted" style={{ fontSize: '0.65rem' }}>({name})</small>} */}
                  </>
             );
         } else if (name) {
@@ -56,7 +58,7 @@ const CustomerSelector = () => {
 
   return (
     // --- Main Container: Reduced padding/margin ---
-    <div className="mb-2 p-1 bg-light rounded shadow-sm"> {/* Reduced mb-2 p-1 */}
+    <div className="p-1 bg-light rounded shadow-sm"> {/* Reduced mb-2 p-1 */}
         {/* Grid Section */}
          <div
            // Reduced gap, padding; keep other classes
@@ -73,9 +75,10 @@ const CustomerSelector = () => {
                      onClick={() => handleButtonClick(customer.did_number)}
                      style={{
                          flex: '1 0 auto', // Keep flex behavior
-                         fontSize: '0.7rem', // Make overall button font smaller
+                         fontSize: '0.65rem', // Make overall button font smaller
                          lineHeight: '1.1', // Tighter line height
-                         padding: '0.15rem 0.3rem' // Smaller padding -> "btn-xs" feel
+                         padding: '0.15rem 0.3rem', // Smaller padding -> "btn-xs" feel
+                         width: '50px'
                         }}
                      title={getDisplayText(customer)} // Tooltip shows full info
                  >

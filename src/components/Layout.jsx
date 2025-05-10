@@ -11,7 +11,7 @@ const Layout = () => {
       // --- CORRECTED: Use currentActions ---
       currentActions,
       updateError,
-      updateSuccessMessage
+      //updateSuccessMessage
      } = useAppContext();
 
   return (
@@ -37,11 +37,11 @@ const Layout = () => {
                 {updateError}
             </div>
         )}
-        {updateSuccessMessage && (
+        {/*{updateSuccessMessage && (
              <div className="alert alert-success alert-dismissible fade show mt-2" role="alert">
                 {updateSuccessMessage}
             </div>
-         )}
+         )}*/}
 
         {/* Outlet for Page-Specific Content */}
         <div className="mt-1">

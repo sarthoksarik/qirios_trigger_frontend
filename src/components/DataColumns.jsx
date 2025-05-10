@@ -23,7 +23,7 @@ const DataColumns = () => {
     return (
         // Main scrollable container for this section
         <div
-            className="data-columns-container mt-3 border rounded shadow-sm"
+            className="data-columns-container border rounded shadow-sm"
             style={{
                 // Define height and enable scrolling for the content area below the sticky header
                 // Adjust '18rem' based on actual height of elements above (Navbar, CustomerSelector, SelectionBar)
