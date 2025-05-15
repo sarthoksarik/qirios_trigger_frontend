@@ -138,7 +138,7 @@ const Navbar = () => {
                     }}
                   >
                     {/* ... Button Content ... */}
-                    {isUpdatingCustomer ? <>...</> : <>Updt</>}
+                    {isUpdatingCustomer ? <>...</> : <>Update</>}
                   </button>
                 }
               </li>
@@ -150,7 +150,7 @@ const Navbar = () => {
                 to="/add-customer"
                 style={{ fontSize: "0.8rem", padding: "0.2rem 0.5rem" }}
               >
-                Add
+                + Add
               </Link>
             </li>
           </ul>

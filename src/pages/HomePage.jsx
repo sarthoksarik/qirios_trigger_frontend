@@ -1,8 +1,8 @@
 // src/pages/HomePage.jsx (Make sure ProfilePage.jsx is similar)
-import React from 'react';
-import { useAppContext } from '../hooks/useAppContext';
+import React from "react";
+import { useAppContext } from "../hooks/useAppContext";
 // NO import for DemandTitleList here
-import DataColumns from '../components/DataColumns'; // DataColumns handles everything now
+import DataColumns from "../components/DataColumns"; // DataColumns handles everything now
 
 const HomePage = () => {
   const { selectedCustomer, loading, error } = useAppContext();
@@ -18,15 +18,19 @@ const HomePage = () => {
       {!selectedCustomer && !loading && !error && (
         <div className="p-3 bg-light rounded shadow-sm text-center">
           <h5>Welcome!</h5>
+          <a
+            href="https://www.flaticon.com/free-animated-icons/surgery"
+            title="surgery animated icons"
+          >
+            Surgery animated icons created by Freepik - Flaticon
+          </a>
           <p>Please select a customer using the dropdown or grid above.</p>
         </div>
       )}
 
       {/* Render DataColumns ONLY when a customer is selected */}
       {/* NO <DemandTitleList /> component rendered here anymore */}
-      {selectedCustomer && !loading && !error && (
-         <DataColumns />
-       )}
+      {selectedCustomer && !loading && !error && <DataColumns />}
     </>
   );
 };
