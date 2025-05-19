@@ -127,11 +127,9 @@ const DataColumns = () => {
                     // Render list if patient types exist
                     <div>
                       {patientTypes.map((patientType, typeIndex) => {
-                        // *** THIS IS THE CORRECTED LINE ***
                         // Compare the object reference directly, not just the name
                         const isSelectedType =
                           selectedPatientType === patientType;
-                        // *** END CORRECTION ***
 
                         const typeKey = patientType.name
                           ? `pt-${patientType.name}-${typeIndex}`
