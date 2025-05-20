@@ -44,14 +44,17 @@ const DataColumns = () => {
         }}
       >
         {/* 1. Render the Demand Title List */}
-        <div className="p-2">
+        <div className="p-1">
           <DemandTitleList /> {/* Rendered ONCE here */}
         </div>
 
         {/* 2. Optional Data Header Row */}
         {/* Show header only if a title is selected */}
-        {selectedTitle && (
-          <div className="d-none d-md-flex row gx-2 px-2 pb-1 fw-bold text-secondary border-top bg-light">
+        {/* {selectedTitle && (
+          <div
+            style={{ display: "none" }}
+            className="d-none d-md-flex row gx-2 px-2 pb-1 fw-bold text-secondary border-top bg-light"
+          >
             <div className="col-5" style={{ fontSize: "0.65rem" }}>
               Demand
             </div>
@@ -59,14 +62,14 @@ const DataColumns = () => {
               Type
             </div>
           </div>
-        )}
+        )} */}
       </div>
       {/* --- End Sticky Header Section --- */}
 
       {/* --- Scrollable Data Content --- */}
       {/* This div contains the actual data rows that will scroll */}
       <div
-        className="px-1 py-2"
+        className="py-1"
         style={{
           display: "flex",
           flexDirection: "column",

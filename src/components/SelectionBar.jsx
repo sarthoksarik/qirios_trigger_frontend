@@ -30,7 +30,7 @@ const SelectionBar = () => {
   };
 
   return (
-    <div className="mb-2 p-1 bg-white rounded shadow-sm border border-primary">
+    <div className="p-1 bg-white rounded shadow-sm border border-primary">
       <ul className="list-group list-group-flush">
         {currentActions.map((action, index) => (
           <li
@@ -66,18 +66,19 @@ const SelectionBar = () => {
                     className="d-block" // d-block for new line, text-muted for style
                     style={{
                       fontSize: "0.90rem", // Slightly smaller or different style
-                      lineHeight: "1.2",
+                      lineHeight: "1 rem",
                       color: "blue",
                       textAlign: "center",
                       // Add margin if description is also present to ensure separation
-                      marginTop:
-                        action.description !== undefined &&
-                        action.description !== null
-                          ? "0.25rem"
-                          : "0",
                     }}
                   >
-                    {<hr></hr>}
+                    {
+                      <hr
+                        style={{
+                          margin: "0",
+                        }}
+                      ></hr>
+                    }
                     {renderTextWithLineBreaks(action.dire_text)}
                   </span>
                 )}

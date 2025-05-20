@@ -2,7 +2,9 @@
 import React, { useEffect, useState, useRef } from "react"; // Import useState and useRef
 import { useParams } from "react-router-dom";
 import { useAppContext } from "../hooks/useAppContext";
-import DataColumns from "../components/DataColumns"; // Assuming this is used for display
+import DataColumns from "../components/DataColumns";
+import AdditionalInfo from "../components/AdditionalInfo";
+import SelectionBar from "../components/SelectionBar";
 
 const ProfilePage = () => {
   const { customerId } = useParams();
@@ -17,6 +19,7 @@ const ProfilePage = () => {
     fetchCustomers, // Keep for initial load scenario
     setError, // Keep for setting errors
     updateSelectedCustomerFromSheet, // *** Get the update function ***
+    currentActions,
   } = useAppContext();
 
   // --- State and Ref for managing initial update ---
@@ -156,6 +159,8 @@ const ProfilePage = () => {
         !contextError && (
           <>
             {/* <h5 className="mb-3">Details for {selectedCustomer.name}</h5> */}
+            <AdditionalInfo />
+            {currentActions?.length > 0 && <SelectionBar />}
             <DataColumns />
           </>
         )}
