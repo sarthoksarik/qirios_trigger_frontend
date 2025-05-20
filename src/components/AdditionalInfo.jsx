@@ -27,11 +27,25 @@ const AdditionalInfo = () => {
     <div style={styles.container}>
       {/* Second Row: Address, Note1, Note2 */}
       <div style={styles.rowTwoContainer}>
-        <div style={{ ...styles.rowTwoItem, textAlign: "left" }}>{address}</div>
-        <div style={{ ...styles.rowTwoItem, textAlign: "left" }}>
+        <div
+          style={{
+            ...styles.rowTwoItem,
+            textAlign: "left",
+            paddingLeft: "4px",
+          }}
+        >
+          {address}
+        </div>
+        <div style={{ ...styles.rowTwoItem, textAlign: "center" }}>
           {note1 || ""} {/* Alternative way to show N/A if empty */}
         </div>
-        <div style={{ ...styles.rowTwoItem, textAlign: "right" }}>
+        <div
+          style={{
+            ...styles.rowTwoItem,
+            textAlign: "right",
+            paddingRight: "4px",
+          }}
+        >
           {name} {/* Alternative way to show N/A if empty */}
         </div>
       </div>
