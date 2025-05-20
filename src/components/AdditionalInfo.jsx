@@ -27,11 +27,11 @@ const AdditionalInfo = () => {
     <div style={styles.container}>
       {/* Second Row: Address, Note1, Note2 */}
       <div style={styles.rowTwoContainer}>
-        <div style={styles.rowTwoItem}>{address}</div>
-        <div style={styles.rowTwoItem}>
+        <div style={{ ...styles.rowTwoItem, textAlign: "left" }}>{address}</div>
+        <div style={{ ...styles.rowTwoItem, textAlign: "left" }}>
           {note1 || ""} {/* Alternative way to show N/A if empty */}
         </div>
-        <div style={styles.rowTwoItem}>
+        <div style={{ ...styles.rowTwoItem, textAlign: "right" }}>
           {name} {/* Alternative way to show N/A if empty */}
         </div>
       </div>
@@ -50,9 +50,9 @@ const styles = {
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)", // Subtle shadow
   },
   rowOne: {
-    fontSize: "0.95rem",
-    borderBottom: "1px solid #f0f0f0",
+    fontSize: "0.75rem",
     textAlign: "center", // Separator line
+    color: "#16a53c",
   },
   rowTwoContainer: {
     display: "flex", // Key: Enables Flexbox for layout
