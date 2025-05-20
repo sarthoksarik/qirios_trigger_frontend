@@ -25,9 +25,6 @@ const AdditionalInfo = () => {
 
   return (
     <div style={styles.container}>
-      {/* First Row: Customer Name */}
-      <div style={styles.rowOne}>{note2 || ""}</div>
-
       {/* Second Row: Address, Note1, Note2 */}
       <div style={styles.rowTwoContainer}>
         <div style={styles.rowTwoItem}>{address}</div>
@@ -38,6 +35,8 @@ const AdditionalInfo = () => {
           {name} {/* Alternative way to show N/A if empty */}
         </div>
       </div>
+      {/* First Row: Customer Name */}
+      <div style={styles.rowOne}>{note2 || ""}</div>
     </div>
   );
 };
