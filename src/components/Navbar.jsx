@@ -2,6 +2,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "../hooks/useAppContext";
+import ContextualCustomerSearch from "./ContextualCustomerSearch";
 
 const Navbar = () => {
   const {
@@ -92,7 +93,12 @@ const Navbar = () => {
             {contextLoading ? "Loading..." : "Customer Select"}
           </span>
         )}
-
+        {/* --- Contextual Search Component --- */}
+        <div className="flex-grow-1 mx-2" style={{ maxWidth: "400px" }}>
+          {" "}
+          {/* Adjust width as needed */}
+          <ContextualCustomerSearch />
+        </div>
         {/* Navbar Toggler Button --- MODIFIED --- */}
         <button
           className="navbar-toggler" // Keep base class
