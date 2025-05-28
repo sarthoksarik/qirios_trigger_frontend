@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useAppContext } from "../hooks/useAppContext";
 
-// Simple debounce utility function
+// Debounce utility function
 const debounce = (func, delay) => {
   let timeoutId;
   return (...args) => {
@@ -19,7 +19,7 @@ const debounce = (func, delay) => {
   };
 };
 
-const ContextualCustomerSearch = () => {
+const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
   const { selectedCustomer, selectTitle, selectDemand, selectPatientType } =
     useAppContext();
 
@@ -29,17 +29,12 @@ const ContextualCustomerSearch = () => {
   const searchContainerRef = useRef(null);
 
   const searchableItems = useMemo(() => {
-    if (!selectedCustomer?.demand_titles) {
-      return [];
-    }
-
+    if (!selectedCustomer?.demand_titles) return [];
     const items = [];
     let uniqueId = 0;
-
     selectedCustomer.demand_titles.forEach((title) => {
       const basePath = `Title: ${title.title}`;
       if (title.title) {
-        // Searchable Title
         items.push({
           id: `ctx-search-${uniqueId++}`,
           type: "title",
@@ -49,13 +44,12 @@ const ContextualCustomerSearch = () => {
           titleObj: title,
           demandObj: null,
           ptObj: null,
+          fieldLabel: "Title",
         });
       }
-
       title.demands?.forEach((demand) => {
         const demandPath = `${basePath} > Demand: ${demand.name}`;
         if (demand.name) {
-          // Searchable Demand
           items.push({
             id: `ctx-search-${uniqueId++}`,
             type: "demand",
@@ -65,13 +59,12 @@ const ContextualCustomerSearch = () => {
             titleObj: title,
             demandObj: demand,
             ptObj: null,
+            fieldLabel: "Demand",
           });
         }
-
         demand.patient_types?.forEach((pt) => {
-          const ptPath = `${demandPath} > PT: ${pt.name}`;
+          const ptPath = `${demandPath} > Type: ${pt.name}`;
           if (pt.name) {
-            // Searchable Patient Type
             items.push({
               id: `ctx-search-${uniqueId++}`,
               type: "patientType",
@@ -81,13 +74,12 @@ const ContextualCustomerSearch = () => {
               titleObj: title,
               demandObj: demand,
               ptObj: pt,
+              fieldLabel: "Type",
             });
           }
-
           pt.actions?.forEach((action) => {
             const actionPathBase = `${ptPath} > Action`;
             if (action.description) {
-              // Searchable Action Description
               items.push({
                 id: `ctx-search-${uniqueId++}`,
                 type: "actionDescription",
@@ -97,10 +89,10 @@ const ContextualCustomerSearch = () => {
                 titleObj: title,
                 demandObj: demand,
                 ptObj: pt,
+                fieldLabel: "Action Desc.",
               });
             }
             if (action.dire_text) {
-              // Searchable Action Dire Text
               items.push({
                 id: `ctx-search-${uniqueId++}`,
                 type: "actionDireText",
@@ -110,6 +102,7 @@ const ContextualCustomerSearch = () => {
                 titleObj: title,
                 demandObj: demand,
                 ptObj: pt,
+                fieldLabel: "Action Dire Text",
               });
             }
           });
@@ -134,7 +127,7 @@ const ContextualCustomerSearch = () => {
       const results = searchableItems.filter((item) =>
         item.textToSearch.toLowerCase().includes(lowerSearchTerm)
       );
-      setSearchResults(results.slice(0, 10)); // Show top N results
+      setSearchResults(results.slice(0, 15));
       setIsDropdownVisible(results.length > 0);
     },
     [searchableItems, selectedCustomer]
@@ -149,7 +142,6 @@ const ContextualCustomerSearch = () => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
     if (selectedCustomer) {
-      // Only search if a customer is selected
       debouncedSearch(newSearchTerm);
     } else {
       setSearchResults([]);
@@ -157,20 +149,44 @@ const ContextualCustomerSearch = () => {
     }
   };
 
-  const handleSelectResult = (item) => {
-    console.log("ContextualSearch: Selecting item's context:", item);
-    // These calls will update the AppContext, and components like DataColumns will react
-    selectTitle(item.titleObj);
-    selectDemand(item.demandObj || null); // Pass null if not applicable to clear
-    selectPatientType(item.ptObj || null); // Pass null if not applicable to clear
+  const handleInputFocus = () => {
+    if (onSearchFocusChange) onSearchFocusChange(true);
+    if ((searchTerm || searchResults.length > 0) && selectedCustomer) {
+      setIsDropdownVisible(true);
+    }
+  };
 
+  const deactivateSearchAndInformParent = useCallback(() => {
+    setIsDropdownVisible(false);
+    if (onSearchFocusChange) onSearchFocusChange(false);
+  }, [onSearchFocusChange]);
+
+  const handleSelectResult = (item) => {
+    if (item.titleObj) {
+      selectTitle(item.titleObj);
+      if (item.demandObj) {
+        selectDemand(item.demandObj);
+        if (item.ptObj) {
+          selectPatientType(item.ptObj);
+        } else {
+          selectPatientType(null);
+        }
+      } else {
+        selectDemand(null);
+        selectPatientType(null);
+      }
+    } else {
+      selectTitle(null);
+      selectDemand(null);
+      selectPatientType(null);
+    }
     setSearchTerm("");
     setSearchResults([]);
-    setIsDropdownVisible(false);
+    deactivateSearchAndInformParent();
   };
 
   const highlightMatch = (text, term) => {
-    if (!term.trim() || !text) return text;
+    if (!term || !text || !term.trim()) return text;
     try {
       const regex = new RegExp(
         `(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
@@ -182,7 +198,6 @@ const ContextualCustomerSearch = () => {
           regex.test(part) ? <strong key={index}>{part}</strong> : part
         );
     } catch (e) {
-      console.error("Error highlighting match:", e);
       return text;
     }
   };
@@ -193,32 +208,28 @@ const ContextualCustomerSearch = () => {
         searchContainerRef.current &&
         !searchContainerRef.current.contains(event.target)
       ) {
-        setIsDropdownVisible(false);
+        deactivateSearchAndInformParent();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [deactivateSearchAndInformParent]);
 
-  // If no customer is selected, perhaps disable the input or show a different placeholder
   const inputPlaceholder = selectedCustomer
-    ? "Search in current customer..."
-    : "Select a customer to search";
+    ? `Search in ${selectedCustomer.name || "customer"}...`
+    : "Select customer";
 
   return (
-    <div style={styles.searchContainer} ref={searchContainerRef}>
+    <div style={styles.searchContainerMain} ref={searchContainerRef}>
+      {" "}
+      {/* Changed style key */}
       <input
         type="text"
         placeholder={inputPlaceholder}
         value={searchTerm}
         onChange={handleInputChange}
-        onFocus={() => {
-          if (searchResults.length > 0 || (searchTerm && selectedCustomer))
-            setIsDropdownVisible(true);
-        }}
-        disabled={!selectedCustomer} // Disable if no customer selected
+        onFocus={handleInputFocus}
+        disabled={!selectedCustomer}
         style={
           selectedCustomer
             ? styles.searchInput
@@ -236,6 +247,7 @@ const ContextualCustomerSearch = () => {
             >
               <div style={styles.itemPath}>{item.displayPath}</div>
               <div style={styles.itemMatch}>
+                {item.fieldLabel}:{" "}
                 {highlightMatch(item.displayMatch, searchTerm)}
               </div>
             </li>
@@ -246,64 +258,63 @@ const ContextualCustomerSearch = () => {
   );
 };
 
-// Basic styles - you'll likely want to integrate these with your app's styling / Navbar
+// Styles (ensure these are appropriate for embedding in Navbar)
 const styles = {
-  searchContainer: {
+  searchContainerMain: {
+    // Renamed to avoid conflict if Navbar uses 'searchContainer'
     position: "relative",
-    minWidth: "200px", // Adjust as needed for Navbar
-    margin: "0 10px", // Example margin for Navbar placement
+    width: "100%", // Will fill its wrapper in Navbar
   },
   searchInput: {
     width: "100%",
-    padding: "0.2rem 0.5rem", // Smaller padding for navbar
-    fontSize: "0.8rem", // Smaller font for navbar
-    border: "1px solid #495057", // Darker border to match bg-dark theme potentially
-    borderRadius: "0.2rem",
-    backgroundColor: "#50585f", // Darker input bg
-    color: "white",
+    padding: "0.375rem 0.75rem",
+    fontSize: "0.875rem",
+    lineHeight: "1.5",
+    color: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    border: "1px solid rgba(255, 255, 255, 0.25)",
+    borderRadius: "0.25rem",
     boxSizing: "border-box",
+    transition:
+      "background-color 0.15s ease-in-out, border-color 0.15s ease-in-out",
   },
   searchInputDisabled: {
-    backgroundColor: "#6c757d",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     cursor: "not-allowed",
+    borderColor: "rgba(255, 255, 255, 0.1)",
   },
   dropdown: {
     position: "absolute",
-    top: "100%",
+    top: "calc(100% + 2px)",
     left: "0",
     right: "0",
-    border: "1px solid #343a40",
-    borderRadius: "0 0 4px 4px",
-    backgroundColor: "#495057", // Darker dropdown
-    color: "white",
+    border: "1px solid rgba(0,0,0,0.15)",
+    borderRadius: "0 0 0.25rem 0.25rem",
+    backgroundColor: "white",
+    color: "#212529",
     listStyleType: "none",
     margin: 0,
     padding: 0,
-    maxHeight: "300px", // Adjust height
+    maxHeight: "calc(100vh - 120px)",
     overflowY: "auto",
-    zIndex: 1100, // Ensure it's above navbar items if necessary
-    boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
+    zIndex: 9999, // Higher than navbar's zIndex
+    boxShadow: "0 0.5rem 1rem rgba(0,0,0,0.175)",
     textAlign: "left",
   },
   dropdownItem: {
-    padding: "8px 10px",
+    padding: "10px 15px",
     cursor: "pointer",
-    borderBottom: "1px solid #5a6268",
+    borderBottom: "1px solid #dee2e6",
   },
-  // Add a hover style for dropdownItem using CSS classes or a library if you use one
-  // e.g., .dropdownItem:hover { backgroundColor: '#5a6268'; }
   itemPath: {
-    fontSize: "0.7rem",
-    color: "#adb5bd", // Lighter color for path
-    marginBottom: "3px",
+    fontSize: "0.75em",
+    color: "#6c757d",
+    marginBottom: "4px",
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
-  itemMatch: {
-    fontSize: "0.8rem",
-    // color: 'white', // Already white from dropdown color
-  },
+  itemMatch: { fontSize: "0.9em", color: "#212529", wordBreak: "break-word" },
 };
 
 export default ContextualCustomerSearch;

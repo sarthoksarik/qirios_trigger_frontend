@@ -40,7 +40,7 @@ const DataColumns = () => {
         style={{
           position: "sticky",
           top: 0, // Stick to the top of the scrollable parent
-          zIndex: 9999, // Keep header above scrolling content within this container
+          zIndex: 999, // Keep header above scrolling content within this container
         }}
       >
         {/* 1. Render the Demand Title List */}
