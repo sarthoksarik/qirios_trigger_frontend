@@ -40,7 +40,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className="navbar navbar-expand-lg navbar-dark bg-dark py-1"
+      className="navbar navbar-dark bg-dark py-1"
       style={{
         position: "sticky",
         top: 0,
