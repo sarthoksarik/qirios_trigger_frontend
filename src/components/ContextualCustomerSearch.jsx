@@ -1,4 +1,3 @@
-// src/components/ContextualCustomerSearch.jsx
 import React, {
   useState,
   useMemo,
@@ -8,7 +7,7 @@ import React, {
 } from "react";
 import { useAppContext } from "../hooks/useAppContext";
 
-// Debounce utility function
+// A simple debounce utility function to delay searching while the user types.
 const debounce = (func, delay) => {
   let timeoutId;
   return (...args) => {
@@ -28,10 +27,18 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const searchContainerRef = useRef(null);
 
+  // --- State to track which "Demand" item is expanded ---
+  // It will store the unique ID of the search result item.
+  const [expandedItemId, setExpandedItemId] = useState(null);
+
+  // 1. Prepare a flattened list of all searchable data from the selected customer.
+  // This is memoized, so it only recalculates when the selectedCustomer changes.
   const searchableItems = useMemo(() => {
     if (!selectedCustomer?.demand_titles) return [];
+
     const items = [];
     let uniqueId = 0;
+
     selectedCustomer.demand_titles.forEach((title) => {
       const basePath = `Title: ${title.title}`;
       if (title.title) {
@@ -47,6 +54,7 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
           fieldLabel: "Title",
         });
       }
+
       title.demands?.forEach((demand) => {
         const demandPath = `${basePath} > Demand: ${demand.name}`;
         if (demand.name) {
@@ -62,6 +70,7 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
             fieldLabel: "Demand",
           });
         }
+
         demand.patient_types?.forEach((pt) => {
           const ptPath = `${demandPath} > Type: ${pt.name}`;
           if (pt.name) {
@@ -77,6 +86,7 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
               fieldLabel: "Type",
             });
           }
+
           pt.actions?.forEach((action) => {
             const actionPathBase = `${ptPath} > Action`;
             if (action.description) {
@@ -112,13 +122,11 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
     return items;
   }, [selectedCustomer]);
 
+  // 2. Perform the search (debounced)
   const performSearch = useCallback(
     (currentSearchTerm) => {
-      if (
-        !currentSearchTerm.trim() ||
-        !selectedCustomer ||
-        searchableItems.length === 0
-      ) {
+      setExpandedItemId(null); // Collapse any expanded item on a new search
+      if (!currentSearchTerm.trim() || !selectedCustomer) {
         setSearchResults([]);
         setIsDropdownVisible(false);
         return;
@@ -156,73 +164,94 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
     }
   };
 
-  const deactivateSearchAndInformParent = useCallback(() => {
+  const deactivateSearch = useCallback(() => {
     setIsDropdownVisible(false);
+    setExpandedItemId(null);
     if (onSearchFocusChange) onSearchFocusChange(false);
   }, [onSearchFocusChange]);
 
-  const handleSelectResult = (item) => {
-    if (item.titleObj) {
-      selectTitle(item.titleObj);
-      if (item.demandObj) {
-        selectDemand(item.demandObj);
-        if (item.ptObj) {
-          selectPatientType(item.ptObj);
-        } else {
-          selectPatientType(null);
-        }
-      } else {
-        selectDemand(null);
-        selectPatientType(null);
-      }
-    } else {
-      selectTitle(null);
-      selectDemand(null);
-      selectPatientType(null);
+  // 3. Handle clicks on any item in the dropdown
+  const handleResultClick = (item) => {
+    // If the clicked item is a "Demand", toggle its expansion.
+    if (item.type === "demand") {
+      setExpandedItemId((prevId) => (prevId === item.id ? null : item.id));
+      return; // Stop here and keep the dropdown open
     }
+
+    // For any other item type (Title, PatientType, Action, or a dynamically added PatientTypeSelection),
+    // we perform the final selection and close the search interface.
+    selectTitle(item.titleObj);
+    selectDemand(item.demandObj || null);
+    selectPatientType(item.ptObj || null);
+
     setSearchTerm("");
     setSearchResults([]);
-    deactivateSearchAndInformParent();
+    deactivateSearch();
   };
 
+  // 4. Create the final list to be rendered, including injected patient types
+  const displayResults = useMemo(() => {
+    if (!expandedItemId) return searchResults;
+
+    const finalResults = [];
+    searchResults.forEach((item) => {
+      finalResults.push(item); // Add the original result item first
+
+      // If this is the expanded demand, inject its patient types as new items
+      if (item.id === expandedItemId) {
+        const patientTypes = item.demandObj?.patient_types || [];
+        patientTypes.forEach((pt, index) => {
+          finalResults.push({
+            id: `${item.id}-pt-${index}`,
+            type: "patientTypeSelection", // Special type to handle the click
+            displayPath: `↳ Select Type:`, // Use an arrow to show it's a child
+            displayMatch: pt.name,
+            fieldLabel: "", // No field label needed for these
+            titleObj: item.titleObj,
+            demandObj: item.demandObj,
+            ptObj: pt,
+          });
+        });
+      }
+    });
+    return finalResults;
+  }, [searchResults, expandedItemId]);
+
+  // 5. Correctly highlight the search term in results
   const highlightMatch = (text, term) => {
     if (!term || !text || !term.trim()) return text;
     try {
-      const regex = new RegExp(
-        `(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-        "gi"
+      const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escapedTerm})`, "gi");
+      const parts = String(text).split(regex);
+      return parts.map((part, index) =>
+        index % 2 === 1 ? <strong key={index}>{part}</strong> : part
       );
-      return String(text)
-        .split(regex)
-        .map((part, index) =>
-          regex.test(part) ? <strong key={index}>{part}</strong> : part
-        );
     } catch (e) {
       return text;
     }
   };
 
+  // 6. Handle clicks outside the component to close the dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         searchContainerRef.current &&
         !searchContainerRef.current.contains(event.target)
       ) {
-        deactivateSearchAndInformParent();
+        deactivateSearch();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [deactivateSearchAndInformParent]);
+  }, [deactivateSearch]);
 
   const inputPlaceholder = selectedCustomer
     ? `Search in ${selectedCustomer.name || "customer"}...`
-    : "Select customer";
+    : "Select a customer";
 
   return (
     <div style={styles.searchContainerMain} ref={searchContainerRef}>
-      {" "}
-      {/* Changed style key */}
       <input
         type="text"
         placeholder={inputPlaceholder}
@@ -236,35 +265,42 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
             : { ...styles.searchInput, ...styles.searchInputDisabled }
         }
       />
-      {isDropdownVisible && searchResults.length > 0 && selectedCustomer && (
+      {isDropdownVisible && displayResults.length > 0 && selectedCustomer && (
         <ul style={styles.dropdown}>
-          {searchResults.map((item) => (
-            <li
-              key={item.id}
-              onClick={() => handleSelectResult(item)}
-              style={styles.dropdownItem}
-              title={item.displayPath}
-            >
-              <div style={styles.itemPath}>{item.displayPath}</div>
-              <div style={styles.itemMatch}>
-                {item.fieldLabel}:{" "}
-                {highlightMatch(item.displayMatch, searchTerm)}
-              </div>
-            </li>
-          ))}
+          {displayResults.map((item) => {
+            const isExpanded = expandedItemId === item.id;
+            const isSelectablePatientType =
+              item.type === "patientTypeSelection";
+            const itemStyle = {
+              ...styles.dropdownItem,
+              ...(isExpanded && styles.dropdownItemExpanded),
+              ...(isSelectablePatientType && styles.patientTypeListItem),
+            };
+
+            return (
+              <li
+                key={item.id}
+                onClick={() => handleResultClick(item)}
+                style={itemStyle}
+                title={item.displayPath}
+              >
+                <div style={styles.itemPath}>{item.displayPath}</div>
+                <div style={styles.itemMatch}>
+                  {item.fieldLabel ? `${item.fieldLabel}: ` : ""}
+                  {highlightMatch(item.displayMatch, searchTerm)}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
   );
 };
 
-// Styles (ensure these are appropriate for embedding in Navbar)
+// Styles for the component
 const styles = {
-  searchContainerMain: {
-    // Renamed to avoid conflict if Navbar uses 'searchContainer'
-    position: "relative",
-    width: "100%", // Will fill its wrapper in Navbar
-  },
+  searchContainerMain: { position: "relative", width: "100%" },
   searchInput: {
     width: "100%",
     padding: "0.375rem 0.75rem",
@@ -297,7 +333,7 @@ const styles = {
     padding: 0,
     maxHeight: "calc(100vh - 120px)",
     overflowY: "auto",
-    zIndex: 9999, // Higher than navbar's zIndex
+    zIndex: 1101,
     boxShadow: "0 0.5rem 1rem rgba(0,0,0,0.175)",
     textAlign: "left",
   },
@@ -305,6 +341,16 @@ const styles = {
     padding: "10px 15px",
     cursor: "pointer",
     borderBottom: "1px solid #dee2e6",
+    transition: "background-color 0.2s ease",
+  },
+  dropdownItemExpanded: {
+    backgroundColor: "#e9ecef", // Highlights the "Demand" that is expanded
+  },
+  patientTypeListItem: {
+    paddingLeft: "30px", // Indents the patient types
+    backgroundColor: "#f8f9fa",
+    // For hover, add this to your main CSS file:
+    // .patient-type-list-item:hover { background-color: #e2e6ea; }
   },
   itemPath: {
     fontSize: "0.75em",
@@ -314,7 +360,11 @@ const styles = {
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
-  itemMatch: { fontSize: "0.9em", color: "#212529", wordBreak: "break-word" },
+  itemMatch: {
+    fontSize: "0.9em",
+    color: "#212529",
+    wordBreak: "break-word",
+  },
 };
 
 export default ContextualCustomerSearch;
