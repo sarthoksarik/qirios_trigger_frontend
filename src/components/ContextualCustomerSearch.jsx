@@ -19,8 +19,13 @@ const debounce = (func, delay) => {
 };
 
 const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
-  const { selectedCustomer, selectTitle, selectDemand, selectPatientType } =
-    useAppContext();
+  const {
+    selectedCustomer,
+    selectTitle,
+    selectDemand,
+    selectPatientType,
+    setScrollToTarget,
+  } = useAppContext();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -175,6 +180,7 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
     // If the clicked item is a "Demand", toggle its expansion.
     if (item.type === "demand") {
       setExpandedItemId((prevId) => (prevId === item.id ? null : item.id));
+      setScrollToTarget({ type: "demand", payload: item.demandObj });
       return; // Stop here and keep the dropdown open
     }
 
@@ -183,7 +189,12 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
     selectTitle(item.titleObj);
     selectDemand(item.demandObj || null);
     selectPatientType(item.ptObj || null);
-
+    // If the selection has a patient type, target it. Otherwise, target the demand.
+    if (item.ptObj) {
+      setScrollToTarget({ type: "patientType", payload: item.ptObj });
+    } else if (item.demandObj) {
+      setScrollToTarget({ type: "demand", payload: item.demandObj });
+    }
     setSearchTerm("");
     setSearchResults([]);
     deactivateSearch();

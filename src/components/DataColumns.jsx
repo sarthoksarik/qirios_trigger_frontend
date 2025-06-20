@@ -1,5 +1,5 @@
 // src/components/DataColumns.jsx
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { useAppContext } from "../hooks/useAppContext";
 import DemandTitleList from "./DemandTitleList"; // Import DemandTitleList here
 
@@ -10,7 +10,53 @@ const DataColumns = () => {
     selectedTitle,
     selectedPatientType, // Need this for highlighting comparison
     selectPatientType, // Function called on click
+    scrollToTarget, // <<<--- 1. Get the target from context
+    setScrollToTarget, // <<<--- 2. Get the setter to reset the signal
   } = useAppContext();
+  // 3. Create refs to hold references to the DOM elements
+  const scrollContainerRef = useRef(null); // Ref for the main scrollable div
+  const demandRefs = useRef(new Map());
+  const patientTypeRefs = useRef(new Map());
+
+  // 4. Create an effect that triggers the scroll
+  useEffect(() => {
+    if (!scrollToTarget) return; // Do nothing if there's no target
+
+    let targetNode = null;
+
+    if (scrollToTarget.type === "demand" && scrollToTarget.payload) {
+      // Find the demand group div in our ref map
+      targetNode = demandRefs.current.get(scrollToTarget.payload.name);
+    } else if (
+      scrollToTarget.type === "patientType" &&
+      scrollToTarget.payload
+    ) {
+      // Find the patient type div in our ref map
+      targetNode = patientTypeRefs.current.get(scrollToTarget.payload.name);
+    }
+
+    if (targetNode) {
+      console.log(
+        `Scrolling to ${scrollToTarget.type}:`,
+        scrollToTarget.payload.name
+      );
+      // Use the modern scrollIntoView API
+      targetNode.scrollIntoView({
+        behavior: "smooth", // Use smooth scrolling
+        block: "center", // Center the element in the viewport vertically
+      });
+
+      // Optional: Add a temporary highlight effect
+      targetNode.style.transition = "background-color 0.2s ease";
+      targetNode.style.backgroundColor = "#d1ecf1"; // A light blue highlight
+      setTimeout(() => {
+        targetNode.style.backgroundColor = ""; // Reset background color
+      }, 1500); // Highlight for 1.5 seconds
+    }
+
+    // 5. Reset the scroll target signal in the context so it doesn't scroll again on re-renders
+    setScrollToTarget(null);
+  }, [scrollToTarget, setScrollToTarget]); // This effect runs only when scrollToTarget changes
 
   // Early exit if no customer selected (should be handled by parent page)
   if (!selectedCustomer) {
@@ -69,6 +115,7 @@ const DataColumns = () => {
       {/* --- Scrollable Data Content --- */}
       {/* This div contains the actual data rows that will scroll */}
       <div
+        ref={scrollContainerRef}
         className="py-1"
         style={{
           display: "flex",
@@ -97,6 +144,11 @@ const DataColumns = () => {
               // Flex container for the Demand Group
               <div
                 key={demandGroupKey}
+                ref={(el) =>
+                  el
+                    ? demandRefs.current.set(demand.name, el)
+                    : demandRefs.current.delete(demand.name)
+                }
                 className={`d-flex border ${
                   demandIndex > 0 ? "border-top-2 border-secondary" : ""
                 } mb-2 rounded shadow-sm`} // Separator style
@@ -141,6 +193,16 @@ const DataColumns = () => {
                           // Div for each clickable patient type
                           <div
                             key={typeKey}
+                            ref={(el) =>
+                              el
+                                ? patientTypeRefs.current.set(
+                                    patientType.name,
+                                    el
+                                  )
+                                : patientTypeRefs.current.delete(
+                                    patientType.name
+                                  )
+                            }
                             className={`patient-type-item p-1 ${
                               patientTypes.length > 1 &&
                               typeIndex < patientTypes.length - 1

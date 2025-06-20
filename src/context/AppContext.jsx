@@ -21,6 +21,7 @@ const AppProvider = ({ children }) => {
   const [currentActions, setCurrentActions] = useState([]); // Renamed state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [scrollToTarget, setScrollToTarget] = useState(null);
   const [isUpdatingCustomer, setIsUpdatingCustomer] = useState(false);
   const [updateError, setUpdateError] = useState(null);
   const [updateSuccessMessage, setUpdateSuccessMessage] = useState("");
@@ -252,6 +253,8 @@ const AppProvider = ({ children }) => {
     currentActions, // Use the renamed state
     loading,
     error, // General fetch/select errors
+    scrollToTarget,
+    setScrollToTarget,
     fetchCustomers,
     selectCustomer,
     selectTitle,
