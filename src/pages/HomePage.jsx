@@ -17,14 +17,11 @@ const HomePage = () => {
       {/* Placeholder when no customer is selected */}
       {!selectedCustomer && !loading && !error && (
         <div className="p-3 bg-light rounded shadow-sm text-center">
-          <h5>Welcome!</h5>
-          <a
-            href="https://www.flaticon.com/free-animated-icons/surgery"
-            title="surgery animated icons"
-          >
-            Surgery animated icons created by Freepik - Flaticon
-          </a>
-          <p>Please select a customer using the dropdown or grid above.</p>
+          <h5>Bienvenue !</h5>
+          <p>
+            Veuillez sélectionner un praticien via le menu déroulant ou en
+            cliquant sur un bouton ci-dessus.
+          </p>
         </div>
       )}
 

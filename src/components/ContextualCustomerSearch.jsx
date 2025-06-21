@@ -258,7 +258,7 @@ const ContextualCustomerSearch = ({ onSearchFocusChange }) => {
   }, [deactivateSearch]);
 
   const inputPlaceholder = selectedCustomer
-    ? `Search in ${selectedCustomer.name || "customer"}...`
+    ? `Rechercher un terme dans ${selectedCustomer.name || "customer"}...`
     : "Select a customer";
 
   return (

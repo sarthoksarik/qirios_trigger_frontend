@@ -69,7 +69,7 @@ const Navbar = () => {
                 style={{ fontSize: "0.8rem" }}
               >
                 <option value="" style={{ fontStyle: "italic" }}>
-                  -- Select Customer --
+                  -- Selectionner --
                 </option>
                 {[...customers]
                   .sort((a, b) => {
