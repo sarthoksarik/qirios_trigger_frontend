@@ -1,7 +1,18 @@
 // src/components/SelectedCustomerDisplay.js
 import React from "react";
 import { useAppContext } from "../hooks/useAppContext"; // Adjust path if your hooks folder is elsewhere
-
+const renderTextWithLineBreaks = (text) => {
+  if (!text && text !== 0) return null; // Allow '0' to be displayed if it's a valid text
+  // Ensure text is a string before calling split
+  const parts = String(text).split(/<br\s*\/?>|\n/);
+  return parts.map((part, idx) => (
+    <React.Fragment key={idx}>
+      {part}
+      {/* Only add <br /> if it's not the last part */}
+      {idx < parts.length - 1 && <br />}
+    </React.Fragment>
+  ));
+};
 const AdditionalInfo = () => {
   const { selectedCustomer } = useAppContext();
 
@@ -34,10 +45,11 @@ const AdditionalInfo = () => {
             paddingLeft: "4px",
           }}
         >
-          {address}
+          {renderTextWithLineBreaks(address)}
         </div>
         <div style={{ ...styles.rowTwoItem, textAlign: "center" }}>
-          {note1 || ""} {/* Alternative way to show N/A if empty */}
+          {renderTextWithLineBreaks(note1) || ""}{" "}
+          {/* Alternative way to show N/A if empty */}
         </div>
         <div
           style={{
@@ -46,7 +58,8 @@ const AdditionalInfo = () => {
             paddingRight: "4px",
           }}
         >
-          {name} {/* Alternative way to show N/A if empty */}
+          {renderTextWithLineBreaks(name)}{" "}
+          {/* Alternative way to show N/A if empty */}
         </div>
       </div>
       {/* First Row: Customer Name */}
