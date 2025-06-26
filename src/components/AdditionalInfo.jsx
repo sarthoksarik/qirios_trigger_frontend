@@ -63,7 +63,7 @@ const AdditionalInfo = () => {
         </div>
       </div>
       {/* First Row: Customer Name */}
-      <div style={styles.rowOne}>{note2 || ""}</div>
+      <div style={styles.rowOne}>{renderTextWithLineBreaks(note2) || ""}</div>
     </div>
   );
 };
