@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from "react";
 import { useAppContext } from "../hooks/useAppContext";
 import DemandTitleList from "./DemandTitleList"; // Import DemandTitleList here
+import renderTextWithLineBreaks from "../utils/utils";
 
 // --- Main DataColumns Component ---
 const DataColumns = () => {
@@ -93,22 +94,6 @@ const DataColumns = () => {
         <div className="p-1">
           <DemandTitleList /> {/* Rendered ONCE here */}
         </div>
-
-        {/* 2. Optional Data Header Row */}
-        {/* Show header only if a title is selected */}
-        {/* {selectedTitle && (
-          <div
-            style={{ display: "none" }}
-            className="d-none d-md-flex row gx-2 px-2 pb-1 fw-bold text-secondary border-top bg-light"
-          >
-            <div className="col-5" style={{ fontSize: "0.65rem" }}>
-              Demand
-            </div>
-            <div className="col-7" style={{ fontSize: "0.65rem" }}>
-              Type
-            </div>
-          </div>
-        )} */}
       </div>
       {/* --- End Sticky Header Section --- */}
 
@@ -166,7 +151,9 @@ const DataColumns = () => {
                     fontWeight: "500",
                   }}
                 >
-                  <small style={{ fontSize: "0.79rem" }}>{demand.name}</small>
+                  <small style={{ fontSize: "0.79rem" }}>
+                    {renderTextWithLineBreaks(demand.name)}
+                  </small>
                 </div>
 
                 {/* Right Side: List of Patient Types */}
@@ -229,7 +216,7 @@ const DataColumns = () => {
                             }
                             title={`Click to add actions for ${patientType.name}`}
                           >
-                            {patientType.name}
+                            {renderTextWithLineBreaks(patientType.name)}
                           </div>
                         );
                       })}
